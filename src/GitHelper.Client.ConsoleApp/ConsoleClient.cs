@@ -1,13 +1,4 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Globalization;
-using System.Reflection.Metadata;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Claims;
-using System.Xml.Linq;
-
-using vc.GitHelper.Helpers;
-using vc.GitHelper.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace vc.GitHelper;
 
@@ -30,8 +21,8 @@ public class ConsoleClient
 
     private List<Repository> DefineRepositories()
     {
-        // Example https://git.vspglobal.com/scm/pm/access-employee.git
 
+        // Example https://git.vspglobal.com/scm/pm/access-employee.git
         var repoNames = PopulateRepoNames();
         var repositories = repoNames.Select(repoName => new Repository
         {
@@ -58,7 +49,7 @@ public class ConsoleClient
                 ConsoleHelper.DisplayUpdate($"Creating {repo.DirectoryInfo.FullName}");
                 repo.DirectoryInfo.Create();
             }
-            
+
             do
             {
                 switch (repo.Status)

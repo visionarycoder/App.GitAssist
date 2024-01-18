@@ -1,6 +1,6 @@
-﻿namespace vc.GitHelper.Models
+﻿namespace vc.GitHelper
 {
-    
+
     public class Repository
     {
         public DirectoryInfo DirectoryInfo { get; set; }

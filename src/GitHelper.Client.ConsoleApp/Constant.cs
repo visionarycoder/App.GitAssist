@@ -2,7 +2,7 @@
 
 public class Constant
 {
-    
+
     public class Status
     {
         public const string NOT_PROCESSED = "Not Processed";

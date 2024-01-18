@@ -1,4 +1,4 @@
-﻿namespace vc.GitHelper.Helpers;
+﻿namespace vc.GitHelper;
 
 public static class ConsoleHelper
 {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace vc.GitHelper.Helpers;
+namespace vc.GitHelper;
 
 public static class EnvironmentHelper
 {

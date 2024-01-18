@@ -1,4 +1,4 @@
-﻿namespace vc.GitHelper.Models;
+﻿namespace vc.GitHelper;
 
 public class ProcessCommand
 {

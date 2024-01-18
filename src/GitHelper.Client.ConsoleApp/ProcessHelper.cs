@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
-using vc.GitHelper.Models;
 
-namespace vc.GitHelper.Helpers;
+namespace vc.GitHelper;
 
 public static class ProcessHelper
 {
