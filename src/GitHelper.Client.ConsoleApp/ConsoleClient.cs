@@ -14,8 +14,6 @@ namespace vc.GitHelper;
 public class ConsoleClient
 {
 
-    private string rootName = @"C:\Dev\VSP\Eyefinity.PM";
-
     public ConsoleClient()
     {
     }
@@ -24,24 +22,22 @@ public class ConsoleClient
     {
 
         ConsoleHelper.DisplayHeader();
-        var repositories = BuildRepositories();
+        var repositories = DefineRepositories();
         ProcessRepositories(repositories);
         ConsoleHelper.DisplayExit();
 
     }
 
-    private List<Repository> BuildRepositories()
+    private List<Repository> DefineRepositories()
     {
         // Example https://git.vspglobal.com/scm/pm/access-employee.git
-        var sourcePrefix = @"https://git.vspglobal.com/scm/pm/";
-        var sourceSuffix = @".git";
 
         var repoNames = PopulateRepoNames();
         var repositories = repoNames.Select(repoName => new Repository
         {
-            Source = sourcePrefix + repoName.Trim().ToLower() + sourceSuffix,
-            Status = "Not Processed",
-            DirectoryInfo = new DirectoryInfo(rootName + @"\" + repoName.Trim())
+            Source = Constant.Source.PREFIX + repoName.Trim().ToLower() + Constant.Source.SUFFIX,
+            Status = Constant.Status.NOT_PROCESSED,
+            DirectoryInfo = new DirectoryInfo(Path.Combine(Constant.FileSystem.ROOT_FOLDER, repoName.Trim()))
         }).ToList();
         foreach (var repo in repositories.Where(r => !r.DirectoryInfo.Exists))
         {
@@ -57,34 +53,40 @@ public class ConsoleClient
         foreach (var repo in repositories)
         {
             ConsoleHelper.DisplayUpdate($"Processing {repo.DirectoryInfo.FullName}");
-            GitActivity workflowState = GitActivity.Pull;
+            if (!repo.DirectoryInfo.Exists)
+            {
+                ConsoleHelper.DisplayUpdate($"Creating {repo.DirectoryInfo.FullName}");
+                repo.DirectoryInfo.Create();
+            }
+            
             do
             {
-                switch (workflowState)
+                switch (repo.Status)
                 {
-                    case GitActivity.Pull:
+                    case Constant.Status.NOT_PROCESSED:
+                    case Constant.Status.PULL:
                         {
-                            workflowState = Pull(repo.DirectoryInfo);
+                            repo.Status = Pull(repo.DirectoryInfo);
                             break;
                         }
-                    case GitActivity.Reset:
+                    case Constant.Status.RESET:
                         {
-                            workflowState = Reset(repo.DirectoryInfo);
+                            repo.Status = Reset(repo.DirectoryInfo);
                             break;
                         }
-                    case GitActivity.Clone:
+                    case Constant.Status.CLONE:
                         {
-                            workflowState = Clone(repo.DirectoryInfo);
+                            repo.Status = Clone(repo.DirectoryInfo);
                             break;
                         }
                 }
-            } while (workflowState != GitActivity.Finished);
+            } while (repo.Status != Constant.Status.FINISHED);
             Console.WriteLine();
         }
 
     }
 
-    private GitActivity Clone(DirectoryInfo di)
+    private string Clone(DirectoryInfo di)
     {
 
         var processCommand = ProcessCommandFactory.CreateCloneCommand(di.Parent.FullName, di.Name);
@@ -100,7 +102,7 @@ public class ConsoleClient
 
     }
 
-    private GitActivity Reset(DirectoryInfo directory)
+    private string Reset(DirectoryInfo directory)
     {
 
         var processCommand = ProcessCommandFactory.CreateResetCommand(directory.FullName);
@@ -116,7 +118,7 @@ public class ConsoleClient
 
     }
 
-    private GitActivity Pull(DirectoryInfo directory)
+    private string Pull(DirectoryInfo directory)
     {
 
         var processCommand = ProcessCommandFactory.CreatePullCommand(directory.FullName);
@@ -155,26 +157,27 @@ public class ConsoleClient
 
     }
 
-    private GitActivity ValidateResult(string stdOut, string errOut)
+    private string ValidateResult(string stdOut, string errOut)
     {
 
         errOut = errOut.ToLower().Trim();
         if (errOut.Contains("error:") && errOut.Contains("unmerged"))
         {
-            return GitActivity.Reset;
+            return Constant.Status.RESET;
         }
 
         if (errOut.Contains("fatal:") && errOut.Contains("not a git repository"))
         {
-            return GitActivity.Clone;
+            return Constant.Status.CLONE;
         }
 
         stdOut = stdOut.ToLower().Trim();
         if (stdOut.Contains("already up to date"))
         {
-            return GitActivity.Finished;
+            return Constant.Status.FINISHED;
         }
-        return GitActivity.Finished;
+
+        return Constant.Status.FINISHED;
     }
 
     private List<string> PopulateRepoNames()
