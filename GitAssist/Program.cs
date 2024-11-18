@@ -1,58 +1,59 @@
 ﻿using System.Diagnostics;
 
-const string unknown = "Unknown";
-const string notProcessed = "NotProcessed";
-const string finished = "Finished";
-const string clone = "Clone";
-const string reset = "Reset";
+const string UNKNOWN = "Unknown";
+const string NOT_PROCESSED = "NotProcessed";
+const string FINISHED = "Finished";
+const string CLONE = "Clone";
+const string RESET = "Reset";
 
-const string prefix = @"https://github.com/visionarycoder";
-const string suffix = @".git";
-const string defaultLocal = @"C:\Dev\GitHub\VisionaryCoder";
+const string SUFFIX = @".git";
 
-var separator = new String('-', 80);
-var title = "Git Assist";
+const string REMOTE = @"https://github.com/visionarycoder";
+const string LOCAL = @"C:\Dev\GitHub\VisionaryCoder";
+
+var separator = new string('-', Console.WindowWidth);
+
+Console.CancelKeyPress += (sender, eventArgs) =>
+{
+    Console.WriteLine(separator);
+    Console.WriteLine("Press any key to exit");
+    Console.WriteLine(separator);
+};
 
 Console.WriteLine(separator);
-Console.WriteLine($"{title}");
+Console.WriteLine("VisionaryCoder: Git Helper");
 Console.WriteLine(separator);
 
 Console.Write("Enter the root directory (press Enter to use default): ");
 var inputLocal = Console.ReadLine();
-var local = string.IsNullOrWhiteSpace(inputLocal) 
-    ? defaultLocal 
-    : inputLocal;
+var input = string.IsNullOrWhiteSpace(inputLocal) ? LOCAL : inputLocal.Trim();
 
-if (! Directory.Exists(local))
+if (!Directory.Exists(input))
 {
-    Console.WriteLine($"The directory '{local}' does not exist.");
+    Console.WriteLine($"The directory '{input}' does not exist.");
     Console.WriteLine("Press any key to exit");
     Console.ReadKey();
     return;
 }
 
-var root = new DirectoryInfo(local);
+var root = new DirectoryInfo(input);
 foreach (var directoryInfo in root.EnumerateDirectories())
 {
+
     Console.WriteLine($"Processing {directoryInfo.FullName}");
 
-    var source = $"{prefix}/{directoryInfo.Name.Trim().ToLower()}{suffix}";
-    var workflowStatus = notProcessed;
+    var source = $"{REMOTE}/{directoryInfo.Name.Trim().ToLower()}{SUFFIX}";
+    var workflowStatus = NOT_PROCESSED;
 
     do
     {
         var commandArgument = workflowStatus switch
         {
-            notProcessed => $"/C git -C {directoryInfo.FullName} pull",
-            reset => $"/C git -C {directoryInfo.FullName} reset --hard",
-            clone => $"/C git -C {directoryInfo.Parent!.FullName} clone {source}",
+            NOT_PROCESSED => $"/C git -C {directoryInfo.FullName} pull",
+            RESET => $"/C git -C {directoryInfo.FullName} reset --hard",
+            CLONE => $"/C git -C {directoryInfo.Parent!.FullName} clone {source}",
             _ => string.Empty
         };
-
-        if(string.IsNullOrWhiteSpace(commandArgument))
-        {
-            break;
-        }
 
         var startInfo = new ProcessStartInfo
         {
@@ -68,15 +69,14 @@ foreach (var directoryInfo in root.EnumerateDirectories())
         var process = new Process { StartInfo = startInfo };
         process.Start();
         process.WaitForExit();
-
         var stdOut = process.StandardOutput.ReadToEnd().ToLower().Trim();
         var errOut = process.StandardError.ReadToEnd().ToLower().Trim();
 
         workflowStatus = errOut switch
         {
-            _ when errOut.Contains("error:") && errOut.Contains("unmerged") => reset,
-            _ when errOut.Contains("fatal:") && errOut.Contains("not a git repository") => clone,
-            _ => stdOut.Contains("already up to date") ? finished : unknown
+            _ when errOut.Contains("error:") && errOut.Contains("unmerged") => RESET,
+            _ when errOut.Contains("fatal:") && errOut.Contains("not a git repository") => CLONE,
+            _ => stdOut.Contains("already up to date") ? FINISHED : UNKNOWN
         };
 
         Console.WriteLine(process.StartInfo.Arguments);
@@ -92,12 +92,14 @@ foreach (var directoryInfo in root.EnumerateDirectories())
             Console.BackgroundColor = backgroundColor;
         }
 
-    } while (workflowStatus != finished);
+    } while (workflowStatus != FINISHED);
 
     Console.WriteLine();
+
 }
 
 Console.WriteLine(separator);
 Console.WriteLine("Press any key to exit");
 Console.WriteLine(separator);
+
 Console.ReadKey();
