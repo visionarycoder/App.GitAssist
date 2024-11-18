@@ -10,6 +10,7 @@
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <AnalysisLevel>latest</AnalysisLevel>
+        <RootNamespace>vc.GitAssist</RootNamespace>
     </PropertyGroup>
 
 </Project>
