@@ -1,19 +1,21 @@
 ﻿using System.Diagnostics;
 
-string line = new('-', 80);
-const string prefix = @"https://github.com/visionarycoder";
-const string suffix = @".git";
-const string defaultLocal = @"C:\Dev\GitHub\VisionaryCoder";
-
 const string unknown = "Unknown";
 const string notProcessed = "NotProcessed";
 const string finished = "Finished";
 const string clone = "Clone";
 const string reset = "Reset";
 
-Console.WriteLine(line);
-Console.WriteLine("VisionaryCoder: Git Helper");
-Console.WriteLine(line);
+const string prefix = @"https://github.com/visionarycoder";
+const string suffix = @".git";
+const string defaultLocal = @"C:\Dev\GitHub\VisionaryCoder";
+
+var separator = new String('-', 80);
+var title = "Git Assist";
+
+Console.WriteLine(separator);
+Console.WriteLine($"{title}");
+Console.WriteLine(separator);
 
 Console.Write("Enter the root directory (press Enter to use default): ");
 var inputLocal = Console.ReadLine();
@@ -47,6 +49,11 @@ foreach (var directoryInfo in root.EnumerateDirectories())
             _ => string.Empty
         };
 
+        if(string.IsNullOrWhiteSpace(commandArgument))
+        {
+            break;
+        }
+
         var startInfo = new ProcessStartInfo
         {
             FileName = "cmd.exe",
@@ -61,13 +68,14 @@ foreach (var directoryInfo in root.EnumerateDirectories())
         var process = new Process { StartInfo = startInfo };
         process.Start();
         process.WaitForExit();
+
         var stdOut = process.StandardOutput.ReadToEnd().ToLower().Trim();
         var errOut = process.StandardError.ReadToEnd().ToLower().Trim();
 
         workflowStatus = errOut switch
         {
-            var err when err.Contains("error:") && err.Contains("unmerged") => reset,
-            var err when err.Contains("fatal:") && err.Contains("not a git repository") => clone,
+            _ when errOut.Contains("error:") && errOut.Contains("unmerged") => reset,
+            _ when errOut.Contains("fatal:") && errOut.Contains("not a git repository") => clone,
             _ => stdOut.Contains("already up to date") ? finished : unknown
         };
 
@@ -89,7 +97,7 @@ foreach (var directoryInfo in root.EnumerateDirectories())
     Console.WriteLine();
 }
 
-Console.WriteLine(line);
+Console.WriteLine(separator);
 Console.WriteLine("Press any key to exit");
-Console.WriteLine(line);
+Console.WriteLine(separator);
 Console.ReadKey();
